@@ -1,0 +1,21 @@
+spring:
+  profiles: staging
+  kafka:
+    template:
+      default-topic: library-events
+    producer:
+      bootstrap-servers: localhost:9095,localhost:9096,localhost:9097
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      ssl:
+        trust-store-location: file:/kafka/ssl/client.truststore.jks
+        trust-store-password: password
+        key-store-location: file:/kafka/ssl/client.keystore.jks
+        key-store-password: password
+      properties:
+        acks: all
+        retries: 5
+        retry.backoff.ms: 1000
+        security:
+          protocol: SSL
+        ssl.endpoint.identification.algorithm:
