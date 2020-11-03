@@ -46,7 +46,7 @@ public class LibraryEventControllerUnitTest {
             .build();
 
         var json = objectMapper.writeValueAsString(libraryEvent);
-        when(libraryEventProducer.sendLibraryEvent_Approach2(isA(LibraryEvent.class))).thenReturn(null);
+        when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(post("/v1/libraryevents")
         .content(json)
@@ -69,7 +69,7 @@ public class LibraryEventControllerUnitTest {
             .build();
 
         var json = objectMapper.writeValueAsString(libraryEvent);
-        when(libraryEventProducer.sendLibraryEvent_Approach2(isA(LibraryEvent.class))).thenReturn(null);
+        when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         var expectedErrorMessage = "book.bookAuthor - must not be blank, book.bookId - must not be null";
         mockMvc.perform(post("/v1/libraryevents")
@@ -94,7 +94,7 @@ public class LibraryEventControllerUnitTest {
             .book(book)
             .build();
         var json = objectMapper.writeValueAsString(libraryEvent);
-        when(libraryEventProducer.sendLibraryEvent_Approach2(isA(LibraryEvent.class))).thenReturn(null);
+        when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(
             put("/v1/libraryevents")
@@ -118,7 +118,7 @@ public class LibraryEventControllerUnitTest {
             .book(book)
             .build();
         var json = objectMapper.writeValueAsString(libraryEvent);
-        when(libraryEventProducer.sendLibraryEvent_Approach2(isA(LibraryEvent.class))).thenReturn(null);
+        when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(
             put("/v1/libraryevents")

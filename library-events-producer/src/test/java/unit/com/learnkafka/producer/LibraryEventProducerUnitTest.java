@@ -51,7 +51,7 @@ public class LibraryEventProducerUnitTest {
 
         future.setException(new RuntimeException("Exception Calling Kafka"));
         when(kafkaTemplate.send(isA(ProducerRecord.class))).thenReturn(future);
-        assertThrows(Exception.class, ()->eventProducer.sendLibraryEvent_Approach2(libraryEvent).get());
+        assertThrows(Exception.class, ()->eventProducer.sendLibraryEvent(libraryEvent).get());
 
     }
 
@@ -79,7 +79,7 @@ public class LibraryEventProducerUnitTest {
         future.set(sendResult);
         when(kafkaTemplate.send(isA(ProducerRecord.class))).thenReturn(future);
 
-        var listenableFuture =  eventProducer.sendLibraryEvent_Approach2(libraryEvent);
+        var listenableFuture =  eventProducer.sendLibraryEvent(libraryEvent);
 
         var sendResult1 = listenableFuture.get();
         assert sendResult1.getRecordMetadata().partition()==1;

@@ -30,7 +30,7 @@ public class LibraryEventsController {
         throws JsonProcessingException, ExecutionException, InterruptedException {
 
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
-        libraryEventProducer.sendLibraryEvent_Approach2(libraryEvent);
+        libraryEventProducer.sendLibraryEvent(libraryEvent);
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
     }
 
@@ -43,7 +43,7 @@ public class LibraryEventsController {
         }
 
         libraryEvent.setLibraryEventType(LibraryEventType.UPDATE);
-        libraryEventProducer.sendLibraryEvent_Approach2(libraryEvent);
+        libraryEventProducer.sendLibraryEvent(libraryEvent);
         return ResponseEntity.status(HttpStatus.OK).body(libraryEvent);
     }
 }
