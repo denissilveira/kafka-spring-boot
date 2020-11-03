@@ -8,6 +8,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EmbeddedKafka(topics = {"library-events"}, partitions = 3)
@@ -56,19 +59,12 @@ public class LibraryEventsControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("on postLibraryEvent, with{valid data}, create new book")
     @Timeout(5)
     void postLibraryEvent() throws InterruptedException {
-        //given
-        var book = Book.builder()
-            .bookId(123)
-            .bookAuthor("DSilveira")
-            .bookName("Kafka using Spring Boot")
-            .build();
 
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(null)
-            .book(book)
-            .build();
+        var book = buildValidBook();
+        var libraryEvent = buildValidLibraryEvent(book);
         var headers = new HttpHeaders();
         headers.set("content-type", MediaType.APPLICATION_JSON.toString());
         HttpEntity<LibraryEvent> request = new HttpEntity<>(libraryEvent, headers);
@@ -78,25 +74,20 @@ public class LibraryEventsControllerIntegrationTest {
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 
         var consumerRecord = KafkaTestUtils.getSingleRecord(consumer, "library-events");
-        var expectedRecord = "{\"libraryEventId\":null,\"libraryEventType\":\"NEW\",\"book\":{\"bookId\":123,\"bookName\":\"Kafka using Spring Boot\",\"bookAuthor\":\"DSilveira\"}}";
         var value = consumerRecord.value();
-        assertEquals(expectedRecord, value);
+        assertNotNull(value);
+        assertTrue(value.contains("DSilveira"));
     }
 
     @Test
+    @DisplayName("on putLibraryEvent, with{valid data}, update the book")
     @Timeout(5)
     void putLibraryEvent() throws InterruptedException {
 
-        var book = Book.builder()
-            .bookId(456)
-            .bookAuthor("DSilveira")
-            .bookName("Kafka using Spring Boot")
-            .build();
+        var book = buildValidBook();
 
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(123)
-            .book(book)
-            .build();
+        var libraryEvent = buildValidLibraryEvent(book);
+        libraryEvent.setLibraryEventId(123);
         var headers = new HttpHeaders();
         headers.set("content-type", MediaType.APPLICATION_JSON.toString());
         var request = new HttpEntity<>(libraryEvent, headers);
@@ -105,9 +96,24 @@ public class LibraryEventsControllerIntegrationTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         var consumerRecord = KafkaTestUtils.getSingleRecord(consumer, "library-events");
-        var expectedRecord = "{\"libraryEventId\":123,\"libraryEventType\":\"UPDATE\",\"book\":{\"bookId\":456,\"bookName\":\"Kafka using Spring Boot\",\"bookAuthor\":\"DSilveira\"}}";
         var value = consumerRecord.value();
-        assertEquals(expectedRecord, value);
+        assertNotNull(value);
+        assertTrue(value.contains("DSilveira"));
 
+    }
+
+    private Book buildValidBook() {
+        return Book.builder()
+            .bookId(123)
+            .bookAuthor("DSilveira")
+            .bookName("Kafka Using Spring Boot")
+            .build();
+    }
+
+    private LibraryEvent buildValidLibraryEvent(Book book) {
+        return LibraryEvent.builder()
+            .libraryEventId(null)
+            .book(book)
+            .build();
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnkafka.domain.Book;
 import com.learnkafka.domain.LibraryEvent;
 import com.learnkafka.producer.LibraryEventProducer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -32,99 +33,89 @@ public class LibraryEventControllerUnitTest {
     LibraryEventProducer libraryEventProducer;
 
     @Test
-    void postLibraryEvent() throws Exception {
+    @DisplayName("on postLibraryEvent, with{valid data}, create new book")
+    void onPostLibraryEventWithValidaDataThenCreateNewBook() throws Exception {
 
-        var book = Book.builder()
-            .bookId(123)
-            .bookAuthor("DSilveira")
-            .bookName("Kafka using Spring Boot")
-            .build();
-
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(null)
-            .book(book)
-            .build();
-
+        var book = buildValidBook();
+        var libraryEvent = buildValidLibraryEvent(book);
         var json = objectMapper.writeValueAsString(libraryEvent);
+
         when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(post("/v1/libraryevents")
-        .content(json)
-        .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated());
 
     }
 
     @Test
-    void postLibraryEvent_4xx() throws Exception {
+    @DisplayName("on postLibraryEvent, with{book null}, returns 400 BAD REQUEST ")
+    void onPostLibraryEventWithBookNullThenReturnsBadRequest() throws Exception {
 
-        var book = Book.builder()
-            .bookId(null)
-            .bookAuthor(null)
-            .bookName("Kafka using Spring Boot")
-            .build();
-
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(null)
-            .book(book)
-            .build();
-
+        var libraryEvent = buildValidLibraryEvent(null);
         var json = objectMapper.writeValueAsString(libraryEvent);
+        var expectedErrorMessage = "book - must not be null";
+
         when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
-        var expectedErrorMessage = "book.bookAuthor - must not be blank, book.bookId - must not be null";
         mockMvc.perform(post("/v1/libraryevents")
-                .content(json)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError())
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
         .andExpect(content().string(expectedErrorMessage));
 
     }
 
     @Test
-    void updateLibraryEvent() throws Exception {
+    @DisplayName("on putLibraryEvent, with{valid data}, update the book")
+    void onPutLibraryEventWithValidaDataThenUpdateBook() throws Exception {
 
-        var book = Book.builder()
-            .bookId(123)
-            .bookAuthor("DSilveira")
-            .bookName("Kafka Using Spring Boot")
-            .build();
-
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(123)
-            .book(book)
-            .build();
+        var book = buildValidBook();
+        var libraryEvent = buildValidLibraryEvent(book);
+        libraryEvent.setLibraryEventId(123);
         var json = objectMapper.writeValueAsString(libraryEvent);
+
         when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(
             put("/v1/libraryevents")
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        .andExpect(status().isOk());
 
     }
 
     @Test
-    void updateLibraryEvent_withNullLibraryEventId() throws Exception {
+    @DisplayName("on putLibraryEvent, with{libraryEventId null}, returns 400 BAD REQUEST ")
+    void onPutLibraryEventWithLibraryEventIdNullThenReturnsBadRequest() throws Exception {
 
-        var book = Book.builder()
-            .bookId(123)
-            .bookAuthor("DSilveira")
-            .bookName("Kafka Using Spring Boot")
-            .build();
-
-        var libraryEvent = LibraryEvent.builder()
-            .libraryEventId(null)
-            .book(book)
-            .build();
+        var book = buildValidBook();
+        var libraryEvent = buildValidLibraryEvent(book);
         var json = objectMapper.writeValueAsString(libraryEvent);
+
         when(libraryEventProducer.sendLibraryEvent(isA(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(
             put("/v1/libraryevents")
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError())
+            .andExpect(status().isBadRequest())
         .andExpect(content().string("Please pass the LibraryEventId"));
+    }
+
+    private Book buildValidBook() {
+        return Book.builder()
+            .bookId(123)
+            .bookAuthor("DSilveira")
+            .bookName("Kafka Using Spring Boot")
+            .build();
+    }
+
+    private LibraryEvent buildValidLibraryEvent(Book book) {
+        return LibraryEvent.builder()
+            .libraryEventId(null)
+            .book(book)
+            .build();
     }
 }
