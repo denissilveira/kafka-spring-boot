@@ -29,7 +29,7 @@ public class LibraryEventProducer {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
+    public void sendDefaultLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         var key = libraryEvent.getLibraryEventId();
         var value = objectMapper.writeValueAsString(libraryEvent);
 
@@ -37,7 +37,8 @@ public class LibraryEventProducer {
         addCallback(listenableFuture, key, value);
     }
 
-    public ListenableFuture<SendResult<Integer,String>> sendLibraryEvent_Approach2(LibraryEvent libraryEvent) throws JsonProcessingException {
+    public ListenableFuture<SendResult<Integer,String>> sendLibraryEvent(LibraryEvent libraryEvent)
+        throws JsonProcessingException {
 
         var key = libraryEvent.getLibraryEventId();
         var value = objectMapper.writeValueAsString(libraryEvent);
@@ -47,12 +48,6 @@ public class LibraryEventProducer {
 
         return listenableFuture;
     }
-
-    private ProducerRecord<Integer, String> buildProducerRecord(Integer key, String value, String topic) {
-        List<Header> recordHeaders = List.of(new RecordHeader("event-source", "scanner".getBytes()));
-        return new ProducerRecord<>(topic, null, key, value, recordHeaders);
-    }
-
 
     public SendResult<Integer, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent)
         throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
@@ -97,5 +92,10 @@ public class LibraryEventProducer {
 
     private void handleSuccess(Integer key, String value, SendResult<Integer, String> result) {
         log.info("Message Sent SuccessFully for the key : {} and the value is {} , partition is {}", key, value, result.getRecordMetadata().partition());
+    }
+
+    private ProducerRecord<Integer, String> buildProducerRecord(Integer key, String value, String topic) {
+        List<Header> recordHeaders = List.of(new RecordHeader("event-source", "scanner".getBytes()));
+        return new ProducerRecord<>(topic, null, key, value, recordHeaders);
     }
 }
