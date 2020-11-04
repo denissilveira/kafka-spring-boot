@@ -30,6 +30,7 @@ public class LibraryEventsController {
         throws JsonProcessingException, ExecutionException, InterruptedException {
 
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
+        //libraryEventProducer.sendLibraryEventIdempotence(libraryEvent);
         libraryEventProducer.sendLibraryEvent(libraryEvent);
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
     }

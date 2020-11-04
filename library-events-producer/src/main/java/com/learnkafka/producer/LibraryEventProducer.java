@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnkafka.domain.LibraryEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
@@ -24,10 +26,34 @@ import java.util.concurrent.TimeoutException;
 public class LibraryEventProducer {
 
     private static final String TOPIC = "library-events"; // create it in a properties.
+
+    @Autowired
+    private KafkaProducer<Integer, String> libraryEventsProducer;
     @Autowired
     private KafkaTemplate<Integer,String> kafkaTemplate;
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Transactional
+    public void sendLibraryEventIdempotence(LibraryEvent libraryEvent)
+        throws JsonProcessingException {
+
+        libraryEventsProducer.initTransactions();
+
+        try {
+            libraryEventsProducer.beginTransaction();
+            var key = libraryEvent.getLibraryEventId();
+            var value = objectMapper.writeValueAsString(libraryEvent);
+            var producerRecord = buildProducerRecord(key, value, TOPIC);
+            var listenableFuture =  libraryEventsProducer.send(producerRecord);
+            libraryEventsProducer.commitTransaction();
+        } catch (Exception e) {
+            log.error("Exception Sending the Message and the exception is {}", e.getMessage());
+            libraryEventsProducer.abortTransaction();
+            throw e;
+        }
+    }
+
 
     public void sendDefaultLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         var key = libraryEvent.getLibraryEventId();
@@ -37,6 +63,7 @@ public class LibraryEventProducer {
         addCallback(listenableFuture, key, value);
     }
 
+    @Transactional
     public ListenableFuture<SendResult<Integer,String>> sendLibraryEvent(LibraryEvent libraryEvent)
         throws JsonProcessingException {
 

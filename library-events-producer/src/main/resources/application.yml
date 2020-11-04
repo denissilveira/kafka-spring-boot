@@ -1,51 +1,17 @@
 spring:
-  profiles:
-    active: dev
----
-spring:
-  profiles: dev
   kafka:
     template:
       default-topic: library-events
     producer:
-      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+      bootstrap-servers: localhost:9092 #,localhost:9093,localhost:9094
       key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         acks: all
         retries: 3
         retry.backoff.ms: 1000
+        enable.idempotence: true
+        transactional.id: library-events-t1
     admin:
       properties:
-        bootstrap.servers: localhost:9092,localhost:9093,localhost:9094
----
-spring:
-  profiles: staging
-  kafka:
-    template:
-      default-topic: library-events
-    producer:
-      bootstrap-servers: localhost:9095,localhost:9096,localhost:9097
-      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      ssl:
-        trust-store-location: file:/kafka/ssl/client.truststore.jks
-        trust-store-password: password
-        key-store-location: file:/kafka/ssl/client.keystore.jks
-        key-store-password: password
-      properties:
-        acks: all
-        retries: 5
-        retry.backoff.ms: 1000
-        security:
-          protocol: SSL
-        ssl.endpoint.identification.algorithm:
-
----
-spring:
-  profiles: prod
-  kafka:
-    producer:
-      bootstrap-servers: prod:9092
-      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+        bootstrap.servers: localhost:9092 #,localhost:9093,localhost:9094
